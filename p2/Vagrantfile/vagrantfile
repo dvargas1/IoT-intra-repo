@@ -1,0 +1,58 @@
+# Versão moderna do Vagrantfile
+Vagrant.configure("2") do |config|
+  # Definição global
+  SERVER_IP = "192.168.56.110"
+
+  # Configuração da caixa base
+  config.vm.box = "bento/ubuntu-24.04"
+  config.vm.synced_folder "../confs", "/vagrant",
+    create: true,
+    type: "nfs",
+    nfs_version: 3,
+    nfs_udp: false
+
+  # Configurações básicas compartilhadas entre as máquinas
+  def setup_base_vm(vm)
+    vm.vm.provider "libvirt" do |vb|
+      vb.memory = "8024"
+      vb.cpus = 4
+    end
+
+    vm.vm.provision "shell", path: "../scripts/bootstrap.sh"
+  end
+
+  # Aplicar todos os deployments Kubernetes
+  def apply_all_deployments(vm)
+    vm.vm.provision "shell", inline: <<-SHELL
+      echo "Aplicando todos os arquivos YAML no diretório /vagrant..."
+      for file in /vagrant/*.yaml; do
+        if [ -f "$file" ]; then
+          echo "Aplicando $file..."
+          kubectl apply -f "$file"
+        else
+          echo "Nenhum arquivo YAML encontrado em /vagrant."
+        fi
+      done
+    SHELL
+  end
+
+  # Configuração da máquina principal (Server)
+  config.vm.define "gsaiagoS" do |server|
+    server.vm.hostname = "gsaiagoServer"
+    server.vm.network "private_network", ip: SERVER_IP
+
+    # Configurações básicas
+    setup_base_vm(server)
+
+    # Instalação do K3s
+    server.vm.provision "shell", inline: <<-SHELL
+      echo "Instalando K3s no servidor..."
+      export INSTALL_K3S_EXEC="--write-kubeconfig-mode=644 --tls-san $(hostname) --node-ip #{SERVER_IP}"
+      curl -sfL https://get.k3s.io | sh -
+      echo "K3s instalado com sucesso!"
+    SHELL
+
+    # Aplicar deployments Kubernetes
+    apply_all_deployments(server)
+  end
+end
