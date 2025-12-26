@@ -1,0 +1,64 @@
+K3S_TOKEN = 'tokenaqui'
+SERVICES = {
+  'gcorreiaS' => {
+    ip: '192.168.56.110',
+    ram: '2048',
+    cpus: '2'
+  },
+  'gcorreiaWS' => {
+    ip: '192.168.56.111',
+    ram: '512',
+    cpus: '1'
+  }
+}
+
+Vagrant.configure("2") do |config|
+  # Common configuration
+  config.vm.box = "bento/ubuntu-24.04"
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+  
+  # gcorreia Server 
+  config.vm.define "gcorreiaS" do |gs|
+
+    # VM specs configuration 
+    config.vm.provider "libvirt" do |vb|
+      vb.memory = SERVICES['gcorreiaS'][:ram]
+      vb.cpus = SERVICES['gcorreiaS'][:cpus]
+    end
+
+    # Network configuration
+    gs.vm.hostname = "gcorreiaS"
+    gs.vm.network "private_network", ip: SERVICES['gcorreiaS'][:ip]
+
+    # Shell setup
+    gs.vm.provision "shell", name: "install-k3s-Server", inline: <<-SHELL
+      echo "### Installing K3s server ###"
+      export K3S_TOKEN=#{K3S_TOKEN}
+      export INSTALL_K3S_EXEC="--write-kubeconfig-mode=644 --node-ip=#{SERVICES['gcorreiaS'][:ip]}"
+      curl -sfL https://get.k3s.io | sh -
+    SHELL
+  end
+
+  # gcorreia Worker Server 
+  config.vm.define "gcorreiaWS" do |gws|
+
+    # VM specs configuration 
+    config.vm.provider "virtualbox" do |vb|
+      vb.memory = SERVICES['gcorreiaWS'][:ram]
+      vb.cpus = SERVICES['gcorreiaWS'][:cpus]
+    end
+
+    # Network configuration
+    gws.vm.hostname = "gcorreiaWS"
+    gws.vm.network "private_network", ip: SERVICES['gcorreiaWS'][:ip]
+
+    # Shell setup
+    gws.vm.provision "shell", name: "install-k3s-Worker", inline: <<-SHELL
+      echo "### Installing k3s worker ###"
+      export K3S_TOKEN=#{K3S_TOKEN}
+      export INSTALL_K3S_EXEC="--node-ip="#{SERVICES['gcorreiaWS'][:ip]}
+      export K3S_URL="https://#{SERVICES['gcorreiaS'][:ip]}:6443"
+      curl -sfL https://get.k3s.io | sh -
+    SHELL
+  end
+end
