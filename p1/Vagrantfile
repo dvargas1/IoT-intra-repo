@@ -5,7 +5,7 @@ SERVICES = {
     ram: '2048',
     cpus: '2'
   },
-  'gcorreiaWS' => {
+  'gcorreiaSW' => {
     ip: '192.168.56.111',
     ram: '512',
     cpus: '1'
@@ -40,23 +40,23 @@ Vagrant.configure("2") do |config|
   end
 
   # gcorreia Worker Server 
-  config.vm.define "gcorreiaWS" do |gws|
+  config.vm.define "gcorreiaSW" do |gws|
 
     # VM specs configuration 
     config.vm.provider "virtualbox" do |vb|
-      vb.memory = SERVICES['gcorreiaWS'][:ram]
-      vb.cpus = SERVICES['gcorreiaWS'][:cpus]
+      vb.memory = SERVICES['gcorreiaSW'][:ram]
+      vb.cpus = SERVICES['gcorreiaSW'][:cpus]
     end
 
     # Network configuration
-    gws.vm.hostname = "gcorreiaWS"
-    gws.vm.network "private_network", ip: SERVICES['gcorreiaWS'][:ip]
+    gws.vm.hostname = "gcorreiaSW"
+    gws.vm.network "private_network", ip: SERVICES['gcorreiaSW'][:ip]
 
     # Shell setup
     gws.vm.provision "shell", name: "install-k3s-Worker", inline: <<-SHELL
       echo "### Installing k3s worker ###"
       export K3S_TOKEN=#{K3S_TOKEN}
-      export INSTALL_K3S_EXEC="--node-ip="#{SERVICES['gcorreiaWS'][:ip]}
+      export INSTALL_K3S_EXEC="--node-ip="#{SERVICES['gcorreiaSW'][:ip]}
       export K3S_URL="https://#{SERVICES['gcorreiaS'][:ip]}:6443"
       curl -sfL https://get.k3s.io | sh -
     SHELL
