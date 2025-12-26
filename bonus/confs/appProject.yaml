@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: project-iot
+  namespace: argocd
+  labels:
+    app: iot-gitlab
+    namespace: gitlab
+spec:
+  description: GitLab Project for iot bonus
+  sourceRepos:
+    - "http://gitlab-webservice-default.gitlab.svc:8181/root/projeto1*"
+  destinations:
+    - namespace: gitlab
+      server: https://kubernetes.default.svc
+  orphanedResources:
+    warn: false

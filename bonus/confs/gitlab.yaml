@@ -1,0 +1,102 @@
+global:
+  edition: ce
+  ingress:
+    configureCertmanager: false
+    class: "nginx"
+  hosts:
+    domain: gitlab.local
+    https: false
+  rails:
+    bootsnap:
+      enabled: false
+
+  # Reduz recursos de CPU/memória para deploy mais rápido
+  gitaly:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 200Mi
+
+  # Desabilita features desnecessárias
+  appConfig:
+    enableUsagePing: false
+    enableSeatLink: false
+    enableImpersonation: false
+
+# Desabilita certmanager (método correto)
+installCertmanager: false
+
+nginx-ingress:
+  enabled: false
+
+prometheus:
+  install: false
+
+gitlab-runner:
+  install: false
+
+upgradeCheck:
+  enabled: false
+
+# Otimizações para startup mais rápido
+redis:
+  metrics:
+    enabled: false
+
+postgresql:
+  metrics:
+    enabled: false
+
+registry:
+  hpa:
+    minReplicas: 1
+    maxReplicas: 1
+
+gitlab:
+  # Webservice com recursos reduzidos
+  webservice:
+    minReplicas: 1
+    maxReplicas: 1
+    resources:
+      requests:
+        cpu: 75m
+        memory: 1Gi
+    workerProcesses: 2
+
+  # Sidekiq com recursos reduzidos
+  sidekiq:
+    minReplicas: 1
+    maxReplicas: 1
+    resources:
+      requests:
+        cpu: 50m
+        memory: 625Mi
+
+  # Gitaly com recursos reduzidos
+  gitaly:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 200Mi
+
+  # Shell com recursos reduzidos
+  gitlab-shell:
+    minReplicas: 1
+    maxReplicas: 1
+    resources:
+      requests:
+        cpu: 10m
+        memory: 100Mi
+
+# Migrations com recursos reduzidos
+migrations:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 200Mi
+
+# Desabilita shared-runners que não serão usados
+shared-runners:
+  enabled: false
+
+# adaptado de: https://gitlab.com/gitlab-org/charts/gitlab/-/blob/master/examples/values-minikube-minimum.yaml

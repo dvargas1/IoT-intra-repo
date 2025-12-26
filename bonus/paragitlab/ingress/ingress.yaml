@@ -1,0 +1,27 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: apps-ingress
+  namespace: dev
+spec:
+  rules:
+  - host: fliperama.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fliperama-service
+            port:
+              number: 5000
+  - host: wil-app.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: wil-service
+            port:
+              number: 8888
